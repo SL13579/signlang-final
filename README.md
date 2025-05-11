@@ -32,3 +32,9 @@ python app/main.py
 ```
 
 웹 애플리케이션 접속: http://localhost:8080
+
+## 📁 모델 및 데이터셋 다운로드
+
+> GitHub 용량 제한으로 인해 아래 링크에서 리소스를 직접 다운로드해주세요.
+
+🔗 [Google Drive 다운로드](https://drive.google.com/drive/folders/16b7rkyuLWFTZd8PwTpspyjfVWuqLbeRU?usp=sharing)
