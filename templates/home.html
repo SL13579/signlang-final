@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ texts.title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='home.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', path='fontsize.css') }}">
+</head>
+
+<body>
+  <!-- 상단 네비게이션 바 -->
+  <header class="navbar">
+    <div class="navbar-left"> <!-- 상단 바 좌측 -->
+      <div class="logo-dot"></div> <!-- 좌측 상단 파란 점 -->
+      <div class="title-box">  <!-- 타이틀 상자 -->
+        <p class="sub-title">BARRIER-FREE</p>
+        <h1 class="main-title">{{ texts.title }}</h1>
+      </div>
+    </div>
+    <div class="navbar-right">  <!-- 상단 바 우측 -->
+      <button class="icon-button" onclick="location.href='/start'"> <!-- 나가기 버튼 -->
+        <i class="fas fa-right-from-bracket"></i>   <!-- 나가기 버튼 아이콘 -->
+      </button>
+      <button class="icon-button emergency" onclick="location.href='/help'"><!-- 도움 버튼 -->
+        <i class="fas fa-lightbulb">    <!-- 도움 버튼 아이콘 -->
+        </i></button>
+      <button class="icon-button" onclick="location.href='/settings'"> <!-- 설정 버튼 -->
+        <i class="fas fa-cog"></i>    <!-- 설정 버튼 아이콘 -->
+      </button>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="main-content">
+    <div class="button-row">
+      <button class="main-button"onclick="location.href='/camera'"> <!-- 카메라 버튼 -->
+        <i class="fas fa-camera"></i>
+        <p>{{ texts.camera }}</p>
+      </button>
+      <button class="main-button mic" onclick="location.href='/mic'"> <!-- 마이크 버튼 -->
+        <i class="fas fa-microphone"></i>
+        <p>{{ texts.mic }}</p>
+      </button>
+    </div>
+
+    <div class="guide-text"> <!-- 안내 멘트 란 -->
+      {{ texts.select_option }}
+    </div>
+  </main>
+  <script src="{{ url_for('static', path='fontsize.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ texts.mic_title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='mic.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', path='fontsize.css') }}">
+</head>
+<body>
+  <div class="mic-container">
+    <!-- 음성 인식 안내 -->
+    <div class="voice-section">
+      <canvas id="waveform" width="300" height="100" style="display: none;"></canvas>
+      <p id="status-text" class="voice-text" style="display: none;">{{ texts.recognizing }}</p>
+      <button id="start-recording" class="send-button">
+        <i class="fas fa-microphone"></i> {{ texts.mic_start }}
+      </button>
+      <button id="stop-recording" class="reset-button" style="display: none; margin-top: 10px;">
+        <i class="fas fa-stop"></i> {{ texts.mic_stop }}
+      </button>
+    </div>
+
+    <!-- 채팅 영역 -->
+    <div class="chat-section">
+      <div class="chat-box">
+        <div id="chat-content" style="padding:10px; overflow-y:auto; flex-grow:1;"></div>
+        <div class="chat-controls">
+          <button class="reset-button" onclick="resetText()"><i class="fas fa-undo"></i></button>
+          <button class="send-button" onclick="confirmText()"><i class="fas fa-check"></i></button>
+        </div>
+      </div>
+      <button class="home-button" onclick="location.href='/home'">
+        <i class="fas fa-home"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', path='fontsize.js') }}"></script>
+  <!-- 🎙️ 음성 인식 + 음파 시각화 JS -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("waveform");
+      const ctx = canvas.getContext("2d");
+      const startBtn = document.getElementById("start-recording");
+      const stopBtn = document.getElementById("stop-recording");
+      const statusText = document.getElementById("status-text");
+      const chatContent = document.getElementById("chat-content");
+
+      let audioCtx, analyser, dataArray, source, stream, animationId;
+      let recognition;
+
+      startBtn.addEventListener("click", async () => {
+        startBtn.style.display = "none";
+        stopBtn.style.display = "inline-block";
+        statusText.style.display = "block";
+        canvas.style.display = "block";
+
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        dataArray = new Uint8Array(analyser.fftSize);
+
+        source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        function drawSymmetricBars() {
+          animationId = requestAnimationFrame(drawSymmetricBars);
+          analyser.getByteFrequencyData(dataArray);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          const barCount = 30;
+          const barWidth = 4;
+          const spacing = 3;
+          const totalWidth = barCount * (barWidth + spacing);
+          const startX = (canvas.width - totalWidth) / 2;
+
+          for (let i = 0; i < barCount; i++) {
+            const value = dataArray[i];
+            const percent = value / 255;
+            const barHeight = percent * canvas.height;
+            const x = startX + i * (barWidth + spacing);
+            const y = (canvas.height - barHeight) / 2;
+            ctx.fillStyle = "#000";
+            ctx.fillRect(x, y, barWidth, barHeight);
+          }
+        }
+        analyser.fftSize = 64;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        source.connect(analyser);
+        drawSymmetricBars();
+
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!window.SpeechRecognition) {
+          alert("{{ texts.mic_error }}");
+          return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.lang = "ko-KR";
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onresult = (event) => {
+          const transcript = Array.from(event.results)
+            .map(result => result[0].transcript)
+            .join("");
+          chatContent.innerText = transcript;
+        };
+        recognition.start();
+      });
+
+      stopBtn.addEventListener("click", () => {
+        recognition.stop();
+        audioCtx.close();
+        stream.getTracks().forEach(track => track.stop());
+        cancelAnimationFrame(animationId);
+
+        stopBtn.style.display = "none";
+        startBtn.style.display = "inline-block";
+        statusText.style.display = "none";
+        canvas.style.display = "none";
+      });
+
+      window.resetText = () => chatContent.innerText = "";
+      window.confirmText = () => alert("{{ texts.mic_result }}");
+    });
+  </script>
+</body>
+</html>

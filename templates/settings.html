@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
+  <title>{{ texts.settings_title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='settings.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', path='fontsize.css') }}">
+</head>
+
+<body>
+  <!-- 상단 바 -->
+  <header class="navbar">
+    <div class="navbar-left">
+      <div class="logo-dot"></div>
+      <div class="title-box">
+        <p class="sub-title">BARRIER-FREE</p>
+        <h1 class="main-title">{{ texts.settings_title }}</h1>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <button class="icon-button" onclick="location.href='/home'">
+        <i class="fas fa-home"></i>
+      </button>
+      <button class="icon-button emergency" onclick="location.href='/help'">
+        <i class="fas fa-lightbulb"></i>
+      </button>
+      <button class="icon-button">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="main-content">
+    <h1 class="main-title">{{ texts.page_title }}</h1>
+
+    <!-- 언어 설정 -->
+    <div class="setting-section">
+      <h2>{{ texts.language_setting }}</h2>
+      <div class="setting-option" onclick="location.href='/set_language/ko'">한국어</div>
+      <div class="setting-option" onclick="location.href='/set_language/en'">ENGLISH</div>
+    </div>
+
+    <!-- 글씨 크기 설정 -->
+    <div class="setting-section">
+      <h2>{{ texts.fontsize_setting }}</h2>
+      <div class="setting-option" onclick="setFontSize('large')">{{ texts.large }}</div>
+      <div class="setting-option" onclick="setFontSize('small')">{{ texts.small }}</div>
+    </div>
+  </main>
+  <script src="{{ url_for('static', path='fontsize.js') }}"></script>
+
+</body>
+</html>

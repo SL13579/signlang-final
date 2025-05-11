@@ -1,0 +1,11 @@
+# .gitignore
+venv/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+runs/
+models/best.pt
+datasets/images/
+datasets/labels/
+models/vosk-model-small-ko/

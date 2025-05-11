@@ -1,0 +1,130 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: white;
+    color: #000;
+  }
+  
+  /* 상단 네비게이션 */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1f275f;
+    color: white;
+    padding: 15px 30px;
+  }
+  
+  .navbar-left {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #809ddc;
+    border-radius: 50%;
+    margin-right: 12px;
+  }
+  
+  .title-box {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sub-title {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  
+  .main-title {
+    font-size: 16px;
+  }
+  
+  /* 상단 메뉴 버튼 */
+  .navbar-right .icon-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    margin-left: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease; /* 부드럽게 효과 적용 */
+  }
+
+  /* 클릭했을 때 살짝 눌리는 느낌 + 투명도 */
+.icon-button:active {
+    opacity: 0.6;
+    transform: scale(0.97);
+  }
+  
+  /* 도움 버튼 아이콘 색상 */
+  .icon-button.emergency i {
+    color: #e84b4b;
+  }
+  
+  /* 메인 콘텐츠 */
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+  }
+  
+  .button-row {
+    display: flex;
+    gap: 60px;
+    margin-bottom: 50px;
+  }
+
+  .main-button {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  /* 버튼 눌렀을 때 투명 효과 */
+  .main-button:active {
+    opacity: 0.6;
+    transform: scale(0.97);  /* 살짝 눌리는 듯한 느낌 */
+  }
+  
+  
+  .main-button i {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  
+  .main-button.mic {
+    background-color: #333;
+    color: white;
+  }
+  
+  .guide-text {
+    font-size: 16px;
+    color: #444;
+    border-top: 1px solid #ddd;     /* 상단 선  */
+    border-bottom: 1px solid #ddd; /* 하단 선  */
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center; /*텍스트 가운데 정렬 */
+    width: 30%;     /* 가로 길이 설정 (전체 화면의 30%만큼의 길이) */
+    margin: 0 auto;     /* 좌우 가운데 정렬 */
+  }
+  

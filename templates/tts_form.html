@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ texts.tts_main }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='fontsize.css') }}">
+</head>
+<body>
+  <h1>{{ texts.tts_title }}</h1>
+  <form action="/speak" method="post">
+    <input type="text" name="text" placeholder="{{ texts.tts_placeholder }}" size="40" />
+    <button type="submit">{{ texts.tts_button }}</button>
+  </form>
+  <script src="{{ url_for('static', path='fontsize.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+/* settings.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: white;
+    color: #1f275f;
+  }
+  
+  /* 상단 네비게이션 */
+  .navbar {
+    background-color: #1f275f;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+  }
+  
+  .navbar-left {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #809ddc;
+    border-radius: 50%;
+    margin-right: 12px;
+  }
+  
+  .title-box {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .main-title {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .sub-title {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  
+  .navbar-right .icon-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    margin-left: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .icon-button:active {
+    opacity: 0.6;
+    transform: scale(0.97);
+  }
+  
+  .icon-button.emergency i {
+    color: #e84b4b;
+  }
+  
+  /* 메인 콘텐츠 */
+  .main-content {
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .setting-section {
+    width: 60%;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  
+  .setting-section h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: 10px 0;
+  }
+  
+  .setting-option {
+    margin: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #1f275f;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .setting-option::before {
+    content: "• ";
+    color: #7ca9ff;
+  }
+  
+  .setting-option:hover {
+    text-decoration: none;
+  }
+  
+  .setting-option:active {
+    opacity: 0.6;
+    transform: scale(0.97);
+  }
+  

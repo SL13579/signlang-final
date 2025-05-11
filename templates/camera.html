@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ texts.camera }}</title>
+
+  <!-- 아이콘 폰트 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', path='camera.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='fontsize.css') }}">
+
+  <style>
+    .chat-box {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+      background-color: white;
+      border-top: 15px solid #6495ed; /* 파란 상단바 */
+    }
+
+    .chat-item {
+      padding: 5px;
+      font-size: 1.1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .chat-controls {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 10px;
+      border-top: 1px solid #eee;
+      background: white;
+    }
+
+    .reset-button, .send-button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .reset-button i {
+      color: black;
+    }
+
+    .send-button i {
+      color: orange;
+    }
+
+    .home-button {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      border: none;
+      background: #fff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="camera-container">
+    <!-- 왼쪽: 웹캠 -->
+    <div class="camera-section">
+      <div class="camera-frame">
+        <video id="video" autoplay muted playsinline width="640" height="480" style="background:#ccc; border:2px solid #aaa;"></video>
+      </div>
+      <p class="camera-text">{{ texts.camera_instruction }}</p>
+    </div>
+
+    <!-- 오른쪽: 채팅 스타일 출력 -->
+    <div class="chat-section">
+      <div class="chat-box" id="chat-box">
+        <!-- 수어 텍스트가 여기에 누적됩니다 -->
+      </div>
+
+      <div class="chat-controls">
+        <button class="reset-button" onclick="resetText()"><i class="fas fa-undo"></i></button>
+        <button class="send-button" onclick="captureFrame()"><i class="fas fa-check"></i></button>
+      </div>
+
+      <button class="home-button" onclick="location.href='/home'">
+        <i class="fas fa-home"></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const chatBox = document.getElementById('chat-box');
+
+    // 웹캠 연결
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        const div = document.createElement("div");
+        div.className = "chat-item";
+        div.innerText = "❌ 웹캠 접근 실패";
+        chatBox.appendChild(div);
+      });
+
+    // 텍스트 초기화
+    function resetText() {
+      chatBox.innerHTML = "";
+    }
+
+    // 수어 예측 요청
+    async function predictFrame() {
+      try {
+        const response = await fetch("/predict");
+        const data = await response.json();
+        const text = data.text || "예측 실패";
+
+        if (!text.includes("입력 중")) {
+          const div = document.createElement("div");
+          div.className = "chat-item";
+          div.innerText = text;
+          chatBox.appendChild(div);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      } catch (err) {
+        const div = document.createElement("div");
+        div.className = "chat-item";
+        div.innerText = "❌ 예측 요청 실패";
+        chatBox.appendChild(div);
+      }
+    }
+
+    // ✔ 버튼 (추가 사용 가능)
+    function captureFrame() {
+      console.log("캡처 버튼 눌림 (predictFrame 호출)");
+      predictFrame();
+    }
+
+    // 2초 간격으로 예측 자동 수행
+    setInterval(predictFrame, 2000);
+  </script>
+
+  <script src="{{ url_for('static', path='fontsize.js') }}"></script>
+</body>
+</html>

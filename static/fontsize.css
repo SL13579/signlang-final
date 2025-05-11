@@ -1,0 +1,18 @@
+/* fontsize.css */
+html[data-fontsize="large"] .main-title,
+html[data-fontsize="large"] .sub-title,
+html[data-fontsize="large"] .guide-text,
+html[data-fontsize="large"] .camera-text,
+html[data-fontsize="large"] .voice-text,
+html[data-fontsize="large"] .setting-option,
+html[data-fontsize="large"] .help-box h2,
+html[data-fontsize="large"] .help-box p,
+html[data-fontsize="large"] .tts-text,
+html[data-fontsize="large"] #result-text,
+html[data-fontsize="large"] .text-large,
+html[data-fontsize="large"] h1,
+html[data-fontsize="large"] h2,
+html[data-fontsize="large"] h3,
+html[data-fontsize="large"] p {
+  font-size: 30px !important;
+}

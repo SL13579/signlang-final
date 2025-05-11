@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시작 화면</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='start.css') }}">
+</head>
+
+<body onclick="location.href='/home'">
+  <div class="container">
+    <div class="circle">
+      <h1>실시간 수어 텍스트 및<br>음성 변환 시스템</h1>
+    </div>
+    <div class="guide-text">
+      시작을 원하시면 화면을 터치하세요.
+      <br>Touch the screen to start.
+    </div>
+  </div>
+  <script>
+    // start 페이지 진입 시 글꼴 크기 리셋
+    document.addEventListener("DOMContentLoaded", () => {
+      localStorage.removeItem("fontSize"); // 저장된 설정 제거
+      document.documentElement.removeAttribute("data-fontsize"); // 속성 제거
+    });
+  </script>
+  
+</body>
+</html>
