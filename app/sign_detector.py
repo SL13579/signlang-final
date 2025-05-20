@@ -1,24 +1,29 @@
 import torch
 import cv2
-import json
-from app.sign_language import label_to_text
-from app.sequence_buffer import append_char
+import numpy as np
 
-# 모델 로딩
+# YOLO 모델 로딩 (손 탐지 전용)
 model = torch.hub.load('ultralytics/yolov5', 'custom', path='models/best.pt', force_reload=True)
 
 def run_yolo_prediction(frame):
-    results = model(frame)
-    predictions = results.pred[0]
+    """
+    입력 프레임에서 손의 바운딩 박스를 YOLOv5로 탐지하고, 
+    가장 신뢰도 높은 바운딩 박스 좌표를 반환합니다.
+    """
+    try:
+        # BGR → RGB 변환
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(img, (640, 640))  # YOLO-friendly size
 
-    # 예외 처리 + 로그 출력
-    if predictions is None or len(predictions) == 0:
-        print("👋 손이 인식되지 않았습니다.")  # ✅ 콘솔에 로그 출력
-        return "손이 인식되지 않았습니다."
+        # YOLO 추론
+        results = model(img)
+        preds = results.xyxy[0]
+        if preds is None or len(preds) == 0:
+            print("👋 손이 인식되지 않았습니다.")
+            return None
 
-    class_id = int(predictions[0][5].item())  # 첫 번째 감지된 클래스
-    predicted_char = label_to_text(class_id)
-    print(f"🔤 예측된 클래스: {class_id} → {predicted_char}")  # ✅ 예측 결과 로그
-    append_char(predicted_char)
-
-    return predicted_char
+        x1, y1, x2, y2 = preds[0][:4].cpu().numpy().astype(int)
+        return x1, y1, x2, y2
+    except Exception as e:
+        print(f"❌ 예외 발생: {e}")
+        return None

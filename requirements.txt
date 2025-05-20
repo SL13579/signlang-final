@@ -22,6 +22,13 @@ seaborn>=0.11.0
 pandas>=1.1.4
 ultralytics>=8.2.34
 
+# --- 자연어 처리: 문장 보정용 ---
+transformers>=4.51.3
+sentencepiece>=0.2.0  # KoGPT, KoBERT용
+
+# --- MediaPipe (손 관절 3D 좌표 추출용) ---
+mediapipe>=0.10.21
+
 # --- 기타 ---
 setuptools>=70.0.0
 gitpython>=3.1.30

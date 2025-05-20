@@ -6,8 +6,12 @@ from fastapi.templating import Jinja2Templates
 from app.sign_detector import run_yolo_prediction
 from app.stt import speech_to_text
 from app.i18n import get_translations
-from app.sequence_buffer import get_combined_text, clear_buffer
-from app.yolo_postprocess import process_prediction  # ✅ 후처리 함수 추가
+from app.sequence_buffer import get_combined_text, clear_buffer, append_char_if_new
+from app.yolo_postprocess import process_prediction
+from app.hand_preprocess import remove_background_hsv
+from app.hand_landmarks import get_3d_landmarks
+from app.language_model import refine_sentence
+from app.char_classifier import predict_char
 
 import cv2
 import uvicorn
@@ -39,11 +43,13 @@ async def start(request: Request):
     texts = get_translations(lang)
     return templates.TemplateResponse("start.html", {"request": request, "texts": texts})
 
+
 @app.get("/home", response_class=HTMLResponse)
 async def home(request: Request):
     lang = request.cookies.get("lang", "ko")
     texts = get_translations(lang)
     return templates.TemplateResponse("home.html", {"request": request, "texts": texts})
+
 
 @app.get("/camera", response_class=HTMLResponse)
 async def camera(request: Request):
@@ -51,11 +57,13 @@ async def camera(request: Request):
     texts = get_translations(lang)
     return templates.TemplateResponse("camera.html", {"request": request, "texts": texts})
 
+
 @app.get("/mic", response_class=HTMLResponse)
 async def mic(request: Request):
     lang = request.cookies.get("lang", "ko")
     texts = get_translations(lang)
     return templates.TemplateResponse("mic.html", {"request": request, "texts": texts})
+
 
 @app.get("/help", response_class=HTMLResponse)
 async def help_page(request: Request):
@@ -63,11 +71,13 @@ async def help_page(request: Request):
     texts = get_translations(lang)
     return templates.TemplateResponse("help.html", {"request": request, "texts": texts})
 
+
 @app.get("/settings", response_class=HTMLResponse)
 async def settings(request: Request):
     lang = request.cookies.get("lang", "ko")
     texts = get_translations(lang)
     return templates.TemplateResponse("settings.html", {"request": request, "texts": texts})
+
 
 @app.get("/predict")
 async def predict_sign_language():
@@ -82,18 +92,43 @@ async def predict_sign_language():
         if not ret:
             return {"error": "카메라 오류: 프레임을 읽을 수 없습니다."}
 
-        raw_prediction = run_yolo_prediction(frame)
-        final_prediction = process_prediction(raw_prediction)  # ✅ 후처리 적용
-        return {"text": final_prediction}
+        # --- YOLOv5로 손 위치 탐지 ---
+        bbox = run_yolo_prediction(frame)
+        if bbox is None:
+            return {"error": "손이 인식되지 않았습니다."}
+
+        x1, y1, x2, y2 = bbox
+        cropped = frame[y1:y2, x1:x2]
+
+        # --- HSV 배경 제거 ---
+        processed_hand = remove_background_hsv(cropped)
+
+        # --- MediaPipe 3D 좌표 추출 ---
+        landmarks_vector = get_3d_landmarks(processed_hand)
+        if landmarks_vector is None:
+            return {"error": "손 랜드마크 인식 실패"}
+
+        # --- 좌표 → 자모 분류 ---
+        predicted_char = predict_char(landmarks_vector)
+
+        # --- 중복 제거 + 버퍼 추가 ---
+        append_char_if_new(predicted_char)
+
+        # --- LSTM 문장 보정 ---
+        sentence = refine_sentence(get_combined_text())
+
+        return {"text": predicted_char, "sentence": sentence}
 
     except Exception as e:
         return {"error": f"예측 중 오류 발생: {str(e)}"}
+
 
 @app.get("/set_language/{lang}")
 async def set_language(lang: str):
     response = RedirectResponse(url="/settings", status_code=302)
     response.set_cookie(key="lang", value=lang)
     return response
+
 
 @app.post("/speak")
 async def speak(text: str = Form(...)):
