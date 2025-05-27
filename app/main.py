@@ -78,7 +78,7 @@ async def settings(request: Request):
     texts = get_translations(lang)
     return templates.TemplateResponse("settings.html", {"request": request, "texts": texts})
 
-
+# app/main.py (수정된 predict 부분만)
 @app.get("/predict")
 async def predict_sign_language():
     try:
@@ -88,40 +88,36 @@ async def predict_sign_language():
 
         ret, frame = cap.read()
         cap.release()
-
         if not ret:
             return {"error": "카메라 오류: 프레임을 읽을 수 없습니다."}
 
-        # --- YOLOv5로 손 위치 탐지 ---
-        bbox = run_yolo_prediction(frame)
-        if bbox is None:
+        # YOLO 예측 실행
+        result = run_yolo_prediction(frame)
+        if result is None:
             return {"error": "손이 인식되지 않았습니다."}
 
-        x1, y1, x2, y2 = bbox
+        x1, y1, x2, y2, predicted_char = result
         cropped = frame[y1:y2, x1:x2]
 
-        # --- HSV 배경 제거 ---
+        # HSV 배경 제거 → MediaPipe 좌표 → 자모 분류기
         processed_hand = remove_background_hsv(cropped)
-
-        # --- MediaPipe 3D 좌표 추출 ---
         landmarks_vector = get_3d_landmarks(processed_hand)
         if landmarks_vector is None:
             return {"error": "손 랜드마크 인식 실패"}
 
-        # --- 좌표 → 자모 분류 ---
+        # 좌표 기반 자모 재확인
         predicted_char = predict_char(landmarks_vector)
 
-        # --- 중복 제거 + 버퍼 추가 ---
+        # 중복 제거 후 버퍼에 추가
         append_char_if_new(predicted_char)
 
-        # --- LSTM 문장 보정 ---
+        # 문장 보정
         sentence = refine_sentence(get_combined_text())
 
         return {"text": predicted_char, "sentence": sentence}
 
     except Exception as e:
         return {"error": f"예측 중 오류 발생: {str(e)}"}
-
 
 @app.get("/set_language/{lang}")
 async def set_language(lang: str):
