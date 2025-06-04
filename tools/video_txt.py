@@ -1,100 +1,87 @@
-# tools/generate_yolo_dataset_from_videos.py
+# tools/generate_dataset_with_mediapipe.py
 
 import cv2
-import random
 import os
-import torch
+import random
+import mediapipe as mp
 
-# ✅ signlang_yolo 기준 상대 경로 (현재 스크립트 위치는 tools/)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # .../signlang_yolo/tools
-ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))  # .../signlang_yolo
-
+# 📁 경로 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # .../tools
+ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))  # .../
 VIDEO_DIR = os.path.join(ROOT_DIR, 'videos')
-MODEL_PATH = os.path.join(ROOT_DIR, 'models', 'best.pt')
 
-# ✅ 모델 불러오기
-model = torch.hub.load('ultralytics/yolov5', 'custom', path=MODEL_PATH, force_reload=True).to('cpu')
+# YOLO 데이터셋 저장 경로
+IMG_TRAIN_DIR = os.path.join(ROOT_DIR, 'datasets/images/train')
+LBL_TRAIN_DIR = os.path.join(ROOT_DIR, 'datasets/labels/train')
 
-def run_yolo_prediction(frame):
-    results = model(frame)
-    preds = results.xyxy[0]
-    if preds is None or len(preds) == 0:
-        return None
-    x1, y1, x2, y2 = map(int, preds[0][:4])
-    return x1, y1, x2, y2
+os.makedirs(IMG_TRAIN_DIR, exist_ok=True)
+os.makedirs(LBL_TRAIN_DIR, exist_ok=True)
 
-# ✅ 클래스 리스트 생성 (0_G, 1_N 등)
-class_list = sorted(set([
-    '_'.join(os.path.splitext(f)[0].split('_')[:2])
-    for f in os.listdir(VIDEO_DIR)
-    if f.endswith('.mp4')
-]))
-class_to_index = {name: idx for idx, name in enumerate(class_list)}
+# 🤚 Mediapipe 초기화
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.6)
 
-print("💡 YOLO 데이터셋 자동 생성 시작")
-print(f"🧾 클래스 매핑: {class_to_index}")
+print("💡 Mediapipe 기반 YOLO 데이터셋 생성 시작")
 
-# ✅ 비디오 반복 처리
+# 🎯 YOLO 라벨 포맷으로 변환
+def get_yolo_bbox(img_width, img_height, x_min, y_min, x_max, y_max):
+    x_center = (x_min + x_max) / 2 / img_width
+    y_center = (y_min + y_max) / 2 / img_height
+    width = (x_max - x_min) / img_width
+    height = (y_max - y_min) / img_height
+    return x_center, y_center, width, height
+
+# 🎞 비디오 반복 처리
 for video_file in os.listdir(VIDEO_DIR):
     if not video_file.endswith('.mp4'):
         continue
 
-    label_candidate = '_'.join(os.path.splitext(video_file)[0].split('_')[:2])
-    if label_candidate not in class_to_index:
-        print(f"⚠ '{video_file}' → 라벨 없음, 스킵")
-        continue
+    label_name = '_'.join(os.path.splitext(video_file)[0].split('_')[:2])
+    label_index = int(label_name.split('_')[0])  # 예: '0_G' → 0
 
-    label_index = class_to_index[label_candidate]
-    cap = cv2.VideoCapture(os.path.join(VIDEO_DIR, video_file))
+    video_path = os.path.join(VIDEO_DIR, video_file)
+    cap = cv2.VideoCapture(video_path)
 
     frame_count = 0
-    saved_frame_count = 0
+    saved_count = 0
 
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-            frame = cv2.resize(frame, (640, 640))
-            bbox = run_yolo_prediction(frame)
-            if bbox is None:
-                print(f"⚠ 손 미탐지: {video_file} - frame {frame_count}")
-                frame_count += 1
-                continue
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = hands.process(frame_rgb)
 
-            h, w, _ = frame.shape
-            x1, y1, x2, y2 = bbox
-            x_center = (x1 + x2) / 2 / w
-            y_center = (y1 + y2) / 2 / h
-            width = (x2 - x1) / w
-            height = (y2 - y1) / h
-
-            # ✅ train/val 분리
-            if random.random() < 0.8:
-                image_dir = os.path.join(ROOT_DIR, 'datasets/images/train')
-                label_dir = os.path.join(ROOT_DIR, 'datasets/labels/train')
-            else:
-                image_dir = os.path.join(ROOT_DIR, 'datasets/images/val')
-                label_dir = os.path.join(ROOT_DIR, 'datasets/labels/val')
-
-            os.makedirs(image_dir, exist_ok=True)
-            os.makedirs(label_dir, exist_ok=True)
-
-            image_name = f"{label_candidate}_{frame_count}.jpg"
-            label_name = f"{label_candidate}_{frame_count}.txt"
-
-            cv2.imwrite(os.path.join(image_dir, image_name), frame)
-            with open(os.path.join(label_dir, label_name), 'w') as f:
-                f.write(f"{label_index} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
-
+        if not results.multi_hand_landmarks:
             frame_count += 1
-            saved_frame_count += 1
+            continue
 
-    except KeyboardInterrupt:
-        print("🛑 중단됨 (현재까지 저장된 프레임 유지)")
+        # 가장 큰 손을 바운딩 박스로 계산
+        image_h, image_w, _ = frame.shape
+        x_list, y_list = [], []
+        for landmark in results.multi_hand_landmarks[0].landmark:
+            x_list.append(landmark.x * image_w)
+            y_list.append(landmark.y * image_h)
+
+        x_min, x_max = min(x_list), max(x_list)
+        y_min, y_max = min(y_list), max(y_list)
+
+        x_center, y_center, w, h = get_yolo_bbox(image_w, image_h, x_min, y_min, x_max, y_max)
+
+        # 파일 저장
+        img_filename = f"{label_name}_{frame_count}.jpg"
+        lbl_filename = f"{label_name}_{frame_count}.txt"
+
+        cv2.imwrite(os.path.join(IMG_TRAIN_DIR, img_filename), frame)
+        with open(os.path.join(LBL_TRAIN_DIR, lbl_filename), 'w') as f:
+            f.write(f"{label_index} {x_center:.6f} {y_center:.6f} {w:.6f} {h:.6f}\n")
+
+        saved_count += 1
+        frame_count += 1
 
     cap.release()
-    print(f"✅ {video_file} 처리 완료 - {saved_frame_count} 프레임 저장됨")
+    print(f"✅ {video_file} 완료 - {saved_count}개 프레임 저장됨")
 
-print("🎉 YOLO 학습용 데이터셋 자동 변환 완료!")
+hands.close()
+print("🎉 Mediapipe 데이터셋 생성 완료!")
