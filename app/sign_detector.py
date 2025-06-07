@@ -3,7 +3,7 @@ import torch
 import cv2
 import numpy as np
 
-# YOLO 모델 로딩
+# YOLO 모델 로딩 yolov5/runs/train/exp4/weights/best.pt로 경로 바꿈(06/08)
 model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/runs/train/exp4/weights/best.pt', force_reload=True)
 
 # 숫자 index → 자모 매핑 테이블
