@@ -34,7 +34,10 @@ async def clear_current_sequence():
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    return RedirectResponse("/start")
+    lang = request.cookies.get("lang", "ko")
+    texts = get_translations(lang)
+    return templates.TemplateResponse("start.html", {"request": request, "texts": texts})
+
 
 
 @app.get("/start", response_class=HTMLResponse)
