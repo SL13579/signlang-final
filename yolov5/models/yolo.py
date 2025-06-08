@@ -124,6 +124,7 @@ class BaseModel(nn.Module):
 class DetectionModel(BaseModel):
     def __init__(self, cfg="yolov5s.yaml", ch=3, nc=None, anchors=None):
         super().__init__()
+
         if isinstance(cfg, dict):
             self.yaml = cfg
         else:
@@ -133,20 +134,28 @@ class DetectionModel(BaseModel):
                 self.yaml = yaml.safe_load(f)
 
         ch = self.yaml["ch"] = self.yaml.get("ch", ch)
+
+        # 클래스 수 덮어쓰기
         if nc and nc != self.yaml["nc"]:
             LOGGER.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
             self.yaml["nc"] = nc
+
+        # anchors 덮어쓰기
         if anchors:
             LOGGER.info(f"Overriding model.yaml anchors with anchors={anchors}")
             self.yaml["anchors"] = anchors
+
+        # anchors가 문자열이면 파싱
         import ast
         if isinstance(self.yaml["anchors"], str):
             self.yaml["anchors"] = ast.literal_eval(self.yaml["anchors"])
 
+        # 모델 생성
         self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch])
         self.names = [str(i) for i in range(self.yaml["nc"])]
         self.inplace = self.yaml.get("inplace", True)
 
+        # Detect 모듈 초기화
         m = self.model[-1]
         if isinstance(m, Detect):
             def _forward(x): return self.forward(x)[0]
@@ -165,12 +174,15 @@ class DetectionModel(BaseModel):
         return self._forward_once(x, profile, visualize)
 
     def _initialize_biases(self, cf=None):
-        m = self.model[-1]
-        for mi, s in zip(m.m, m.stride):
+        m = self.model[-1]  # Detect layer
+        for mi, s in zip(m.m, m.stride):  # per output layer
             b = mi.bias.view(m.na, -1)
+            # obj bias
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
+            # cls bias
             b.data[:, 5 : 5 + m.nc] += math.log(0.6 / (m.nc - 0.99999)) if cf is None else torch.log(cf / cf.sum())
             mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
+
 
 
 Model = DetectionModel
