@@ -3,6 +3,10 @@ import torch
 import os
 import numpy as np
 
+USE_CHAR_MODEL = False  # 필요할 때 True로만 바꿔주면 됨!
+
+model = None
+    
 # MLP 모델 정의
 class HandCharClassifier(torch.nn.Module):
     def __init__(self, input_size=63, hidden_size=128, num_classes=31):
@@ -17,13 +21,16 @@ class HandCharClassifier(torch.nn.Module):
         x = self.fc2(x)
         return x
 
-# 모델 로드
-model = HandCharClassifier()
-os.makedirs('models', exist_ok=True)
-if not os.path.exists('models/char_classifier.pth'):
-    torch.save(model.state_dict(), 'models/char_classifier.pth')
-model.load_state_dict(torch.load('models/char_classifier.pth'))
-model.eval()
+# 조건부 모델 로드
+if USE_CHAR_MODEL:
+    os.makedirs('models', exist_ok=True)
+    model = HandCharClassifier()
+    if not os.path.exists('models/char_classifier.pth'):
+        torch.save(model.state_dict(), 'models/char_classifier.pth')
+    model.load_state_dict(torch.load('models/char_classifier.pth'))
+    model.eval()
+else:
+    print("⚠️ char_classifier 모델 비활성화 상태입니다.")
 
 # 라벨 매핑 (0~30 → 영어 자모 기준)
 label_map = {
@@ -37,6 +44,10 @@ label_map = {
 }
 
 def predict_char(landmarks_vector: np.ndarray) -> str:
+    if model is None:
+        print("❌ char_classifier 모델이 로드되지 않았습니다.")
+        return '?'
+
     input_tensor = torch.tensor(landmarks_vector, dtype=torch.float32).unsqueeze(0)
     with torch.no_grad():
         output = model(input_tensor)
