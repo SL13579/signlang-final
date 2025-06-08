@@ -1,5 +1,6 @@
 # app/char_classifier.py
 import torch
+import os
 import numpy as np
 
 # MLP 모델 정의
@@ -18,6 +19,9 @@ class HandCharClassifier(torch.nn.Module):
 
 # 모델 로드
 model = HandCharClassifier()
+os.makedirs('models', exist_ok=True)
+if not os.path.exists('models/char_classifier.pth'):
+    torch.save(model.state_dict(), 'models/char_classifier.pth')
 model.load_state_dict(torch.load('models/char_classifier.pth'))
 model.eval()
 
