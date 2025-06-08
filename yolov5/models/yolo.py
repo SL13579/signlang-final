@@ -246,3 +246,11 @@ if __name__ == "__main__":
     model = DetectionModel(cfg='models/mobile-yolo5s_voc.yaml', ch=3, nc=31, anchors=anchors)
     dummy_input = torch.randn(1, 3, 640, 640)
     output = model(dummy_input)
+
+class DetectMultiBackend(nn.Module):
+    def __init__(self, model):
+        super(DetectMultiBackend, self).__init__()
+        self.model = model
+
+    def forward(self, x):
+        return self.model(x)
