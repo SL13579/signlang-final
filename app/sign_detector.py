@@ -2,9 +2,15 @@
 import torch
 import cv2
 import numpy as np
+import os
 
-# YOLO 모델 로딩 yolov5/runs/train/exp4/weights/best.pt로 경로 바꿈(06/08)
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/runs/train/exp4/weights/best.pt', force_reload=True)
+model_path = 'yolov5/runs/train/exp4/weights/best.pt'
+
+if os.path.exists(model_path):
+    model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
+else:
+    print("⚠️ YOLO 모델 파일이 존재하지 않아, 모델 로딩 생략됨")
+    model = None  # 또는 예외 대신 처리 가능한 기본값
 
 # 숫자 index → 자모 매핑 테이블
 index_to_char = {
@@ -21,6 +27,10 @@ def run_yolo_prediction(frame):
     """
     YOLOv5를 사용해 손을 탐지하고, 바운딩박스 좌표와 자모를 반환합니다.
     """
+    if model is None:
+        print("⚠️ YOLO 모델이 로드되지 않았습니다. 예측을 생략합니다.")
+        return None
+
     try:
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (640, 640))
