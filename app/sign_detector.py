@@ -4,13 +4,16 @@ import cv2
 import numpy as np
 import os
 
+# 🔁 YOLO 모델을 로드할지 말지 토글
+USE_YOLO_MODEL = False  # 나중에 True로 바꾸기만 하면 됨!
+
 model_path = 'yolov5/runs/train/exp4/weights/best.pt'
 
-if os.path.exists(model_path):
+if USE_YOLO_MODEL and os.path.exists(model_path):
     model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
 else:
-    print("⚠️ YOLO 모델 파일이 존재하지 않아, 모델 로딩 생략됨")
-    model = None  # 또는 예외 대신 처리 가능한 기본값
+    print("⚠️ YOLO 모델 비활성화됨 (또는 모델 파일 없음)")
+    model = None
 
 # 숫자 index → 자모 매핑 테이블
 index_to_char = {
